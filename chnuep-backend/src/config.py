@@ -9,6 +9,8 @@ class Settings(BaseSettings):
     DB_NAME: str
     DB_PORT: int
 
+    JWT_SECRET_KEY: str
+
     @property
     def DB_URL(self) -> str:
         return f"postgresql+asyncpg://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
