@@ -6,7 +6,7 @@ import { setCredentials } from "@/lib/store/features/auth/authSlice";
 import { useEffect } from "react";
 
 export default function AuthPersist({ children }: { children: React.ReactNode }) {
-    // Запит виконується автоматично при монтуванні компонента
+    // Request is done automatically when mounting component
     const { data: user, isLoading } = useGetMeQuery();
     const dispatch = useDispatch();
 
@@ -15,9 +15,6 @@ export default function AuthPersist({ children }: { children: React.ReactNode })
             dispatch(setCredentials(user));
         }
     }, [user, dispatch]);
-
-    // Можна додати красивий спіннер завантаження на весь екран тут
-    // if (isLoading) return <div>Loading...</div>;
 
     return <>{children}</>;
 }

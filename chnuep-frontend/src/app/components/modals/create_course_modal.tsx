@@ -20,7 +20,7 @@ const CreateCourseModal: React.FC<CreateCourseModalProps> = ({ isOpen, onClose }
     });
 
     const handleSubmit = async (values: { title: string; description: string }, { resetForm }: any) => {
-        console.log("SUBMITTING FORM...", values); // Лог для перевірки
+        console.log("SUBMITTING FORM...", values);
         try {
             await createCourse(values).unwrap();
             message.success("Курс успішно створено!");
@@ -44,7 +44,6 @@ const CreateCourseModal: React.FC<CreateCourseModalProps> = ({ isOpen, onClose }
                 validationSchema={validationSchema}
                 onSubmit={handleSubmit}
             >
-                {/* Дістаємо submitForm тут */}
                 {({ values, errors, touched, handleChange, handleBlur, submitForm }) => (
                     <Form layout="vertical">
                         <Form.Item
@@ -76,10 +75,6 @@ const CreateCourseModal: React.FC<CreateCourseModalProps> = ({ isOpen, onClose }
                             />
                         </Form.Item>
 
-                        {/* ВАЖЛИВО: 
-                            1. htmlType="button" (щоб не конфліктувати з формою)
-                            2. onClick={submitForm} (прямий виклик Formik)
-                        */}
                         <Button
                             type="primary"
                             htmlType="button"

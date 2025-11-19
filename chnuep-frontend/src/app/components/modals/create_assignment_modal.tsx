@@ -20,7 +20,7 @@ const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({ isOpen, o
         title: Yup.string().required("Введіть назву завдання"),
         description: Yup.string().required("Введіть опис завдання"),
         max_grade: Yup.number().min(1).max(100).required("Вкажіть максимальний бал"),
-        due_date: Yup.mixed().required("Вкажіть дату здачі"), // Yup не дуже добре працює з об'єктами Dayjs, тому mixed
+        due_date: Yup.mixed().required("Вкажіть дату здачі"),
     });
 
     const handleSubmit = async (values: any, { resetForm }: any) => {
@@ -28,7 +28,6 @@ const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({ isOpen, o
             await createAssignment({
                 ...values,
                 course_id: courseId,
-                // Конвертуємо dayjs об'єкт у ISO рядок для бекенду
                 due_date: values.due_date ? values.due_date.toISOString() : null
             }).unwrap();
 
@@ -91,7 +90,6 @@ const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({ isOpen, o
                                     className="w-full"
                                     showTime
                                     format="YYYY-MM-DD HH:mm"
-                                    // AntD DatePicker працює з dayjs, Formik хоче значення
                                     value={values.due_date}
                                     onChange={(date) => setFieldValue("due_date", date)}
                                 />
@@ -100,7 +98,7 @@ const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({ isOpen, o
 
                         <Button
                             type="primary"
-                            htmlType="button" // Важливо: button, щоб уникнути конфлікту
+                            htmlType="button"
                             onClick={() => submitForm()}
                             loading={isLoading}
                             block

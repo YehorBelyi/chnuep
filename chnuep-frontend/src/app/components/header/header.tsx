@@ -25,21 +25,20 @@ const Header: React.FC = () => {
     const router = useRouter();
     const dispatch = useDispatch();
 
-    // Отримуємо стан користувача з Redux
     const { user, isAuthenticated } = useSelector((state: RootState) => state.auth);
     const [logoutApi] = useLogoutMutation();
 
     const handleLogout = async () => {
         try {
-            await logoutApi().unwrap(); // Виклик API (очистка cookies)
-            dispatch(logoutAction()); // Очистка Redux store
-            router.push("/"); // Редірект на головну
+            await logoutApi().unwrap(); // Request to API
+            dispatch(logoutAction()); // Clean redux store
+            router.push("/"); // Redirect to home
         } catch (error) {
             console.error("Logout failed", error);
         }
     };
 
-    // Меню для авторизованого користувача
+    // Menu for authenticated user
     const userMenuItems: MenuProps['items'] = [
         {
             key: '1',
@@ -62,7 +61,6 @@ const Header: React.FC = () => {
         <>
             <header className="bg-white shadow-md fixed top-0 w-full z-50">
                 <div className="w-full mx-auto max-w-screen-xl p-4 flex items-center justify-between">
-                    {/* Логотип */}
                     <Link href="/" className="flex items-center gap-4">
                         <div className="w-[50px] h-[50px]">
                             <Image
@@ -78,7 +76,6 @@ const Header: React.FC = () => {
                         </span>
                     </Link>
 
-                    {/* Права частина хедера */}
                     <div className="flex items-center gap-4">
                         <Link
                             href="/"
@@ -88,7 +85,7 @@ const Header: React.FC = () => {
                         </Link>
 
                         {isAuthenticated && user ? (
-                            // --- Якщо користувач авторизований ---
+                            // If current user is authenticated
                             <Dropdown menu={{ items: userMenuItems }} trigger={['click']}>
                                 <Space className="cursor-pointer hover:bg-gray-100 p-2 rounded-lg transition">
                                     <Avatar
@@ -102,7 +99,7 @@ const Header: React.FC = () => {
                                 </Space>
                             </Dropdown>
                         ) : (
-                            // --- Якщо гість ---
+                            // If current user is guest
                             <div className="flex gap-2">
                                 <Button
                                     type="primary"
@@ -121,7 +118,6 @@ const Header: React.FC = () => {
                 </div>
             </header>
 
-            {/* Модальні вікна рендеримо завжди, керуємо видимістю через props */}
             <LoginModal
                 isLoginModalOpened={isLoginModalOpened}
                 setIsLoginModalOpened={setIsLoginModalOpened}

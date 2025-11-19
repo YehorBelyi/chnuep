@@ -8,7 +8,7 @@ import { useGetMyCoursesQuery } from '@/lib/store/features/courses/coursesApi';
 export default function TeacherView({ user }: { user: any }) {
     const [isModalOpen, setIsModalOpen] = useState(false);
 
-    // Отримуємо реальні курси з бекенду
+    // Getting courses from backend
     const { data: courses, isLoading } = useGetMyCoursesQuery();
 
     return (

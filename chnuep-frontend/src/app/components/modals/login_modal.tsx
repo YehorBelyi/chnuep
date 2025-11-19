@@ -11,7 +11,7 @@ import { setCredentials } from "@/lib/store/features/auth/authSlice";
 import { useRouter } from "next/navigation";
 
 const LoginModal: React.FC<LoginModalProps> = ({ isLoginModalOpened, setIsLoginModalOpened }) => {
-    const [login, { isLoading }] = useLoginMutation(); // RTK Query hook
+    const [login, { isLoading }] = useLoginMutation();
     const dispatch = useDispatch();
     const router = useRouter();
 
@@ -22,17 +22,10 @@ const LoginModal: React.FC<LoginModalProps> = ({ isLoginModalOpened, setIsLoginM
 
     const handleSubmit = async (values: LoginValues) => {
         try {
-            // 1. Робимо запит на бекенд
             const userData = await login(values).unwrap();
-
-            // 2. Зберігаємо юзера в Redux
             dispatch(setCredentials(userData.user));
-
-            // 3. Показуємо успіх
             message.success("Вітаємо в системі!");
             setIsLoginModalOpened(false);
-
-            // 4. Редірект в дашборд
             router.push("/dashboard");
 
         } catch (err: any) {

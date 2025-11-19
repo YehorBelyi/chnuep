@@ -4,10 +4,9 @@ import React from "react";
 import { Modal, Form, Input, Button, message, Select } from "antd";
 import { Formik } from "formik";
 import * as Yup from "yup";
-import { RegisterModalProps, RegisterValues } from "@/app/types/RegisterTypes"; // Переконайтесь, що в типах є full_name, якщо ні - додайте нижче
+import { RegisterModalProps, RegisterValues } from "@/app/types/RegisterTypes";
 import { useRegisterMutation } from "@/lib/store/features/auth/authApi";
 
-// Розширимо інтерфейс значень форми тут, якщо він ще не оновлений у types
 interface ExtendedRegisterValues extends RegisterValues {
     full_name: string;
 }
@@ -26,7 +25,6 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isRegisterModalOpened, se
 
     const handleSubmit = async (values: ExtendedRegisterValues, { setSubmitting }: any) => {
         try {
-            // Викликаємо API реєстрації
             await register(values).unwrap();
 
             message.success("Реєстрація успішна! Тепер увійдіть у систему.");
