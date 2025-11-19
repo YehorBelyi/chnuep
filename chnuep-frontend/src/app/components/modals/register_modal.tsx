@@ -1,86 +1,95 @@
 "use client";
 
 import React from "react";
-import { Modal, Form, Input, Button } from "antd";
-import { FormikProps } from "formik";
-import { RegisterValues, RegisterModalProps } from "@/app/types/RegisterTypes";
+import { Modal, Form, Input, Button, message, Select } from "antd";
+import { Formik } from "formik";
+import * as Yup from "yup";
+import { RegisterModalProps, RegisterValues } from "@/app/types/RegisterTypes"; // Переконайтесь, що в типах є full_name, якщо ні - додайте нижче
+import { useRegisterMutation } from "@/lib/store/features/auth/authApi";
 
-const RegisterModal: React.FC<FormikProps<RegisterValues> & RegisterModalProps> = (props) => {
-    const {
-        values,
-        errors,
-        touched,
-        handleChange,
-        handleBlur,
-        handleSubmit,
-        isSubmitting,
-        isRegisterModalOpened,
-        setIsRegisterModalOpened,
-    } = props;
+// Розширимо інтерфейс значень форми тут, якщо він ще не оновлений у types
+interface ExtendedRegisterValues extends RegisterValues {
+    full_name: string;
+}
 
-    const handleCancel = () => {
-        setIsRegisterModalOpened(false);
+const RegisterModal: React.FC<RegisterModalProps> = ({ isRegisterModalOpened, setIsRegisterModalOpened }) => {
+    const [register, { isLoading }] = useRegisterMutation();
+
+    const validationSchema = Yup.object({
+        email: Yup.string().email("Некоректна пошта").required("Обов'язкове поле"),
+        full_name: Yup.string().min(2, "Занадто коротке ім'я").required("Обов'язкове поле"),
+        password: Yup.string().min(6, "Мінімум 6 символів").required("Обов'язкове поле"),
+        confirmPassword: Yup.string()
+            .oneOf([Yup.ref("password")], "Паролі не співпадають")
+            .required("Підтвердження обов'язкове"),
+    });
+
+    const handleSubmit = async (values: ExtendedRegisterValues, { setSubmitting }: any) => {
+        try {
+            // Викликаємо API реєстрації
+            await register(values).unwrap();
+
+            message.success("Реєстрація успішна! Тепер увійдіть у систему.");
+            setIsRegisterModalOpened(false);
+        } catch (err: any) {
+            message.error(err?.data?.detail || "Помилка реєстрації");
+        } finally {
+            setSubmitting(false);
+        }
     };
 
     return (
         <Modal
-            title="Sign Up"
+            title="Реєстрація"
             open={isRegisterModalOpened}
-            onCancel={handleCancel}
+            onCancel={() => setIsRegisterModalOpened(false)}
             footer={null}
         >
-            <Form layout="vertical" onFinish={handleSubmit}>
-                <Form.Item
-                    label="Email"
-                    validateStatus={touched.email && errors.email ? "error" : ""}
-                    help={touched.email && errors.email ? errors.email : ""}
-                >
-                    <Input
-                        name="email"
-                        placeholder="Enter your email"
-                        value={values.email}
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                    />
-                </Form.Item>
+            <Formik
+                initialValues={{ email: "", full_name: "", password: "", confirmPassword: "" }}
+                validationSchema={validationSchema}
+                onSubmit={handleSubmit}
+            >
+                {({ values, errors, touched, handleChange, handleBlur, handleSubmit }) => (
+                    <Form layout="vertical" onFinish={handleSubmit}>
+                        <Form.Item
+                            label="Email"
+                            validateStatus={touched.email && errors.email ? "error" : ""}
+                            help={touched.email && errors.email ? errors.email : ""}
+                        >
+                            <Input name="email" value={values.email} onChange={handleChange} onBlur={handleBlur} />
+                        </Form.Item>
 
-                <Form.Item
-                    label="Password"
-                    validateStatus={touched.password && errors.password ? "error" : ""}
-                    help={touched.password && errors.password ? errors.password : ""}
-                >
-                    <Input.Password
-                        name="password"
-                        placeholder="Enter your password"
-                        value={values.password}
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                    />
-                </Form.Item>
+                        <Form.Item
+                            label="ПІБ (Повне ім'я)"
+                            validateStatus={touched.full_name && errors.full_name ? "error" : ""}
+                            help={touched.full_name && errors.full_name ? errors.full_name : ""}
+                        >
+                            <Input name="full_name" placeholder="Іванов Іван Іванович" value={values.full_name} onChange={handleChange} onBlur={handleBlur} />
+                        </Form.Item>
 
-                <Form.Item
-                    label="Confirm Password"
-                    validateStatus={touched.confirmPassword && errors.confirmPassword ? "error" : ""}
-                    help={touched.confirmPassword && errors.confirmPassword ? errors.confirmPassword : ""}
-                >
-                    <Input.Password
-                        name="confirmPassword"
-                        placeholder="Confirm your password"
-                        value={values.confirmPassword}
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                    />
-                </Form.Item>
+                        <Form.Item
+                            label="Пароль"
+                            validateStatus={touched.password && errors.password ? "error" : ""}
+                            help={touched.password && errors.password ? errors.password : ""}
+                        >
+                            <Input.Password name="password" value={values.password} onChange={handleChange} onBlur={handleBlur} />
+                        </Form.Item>
 
-                <Button
-                    type="primary"
-                    htmlType="submit"
-                    loading={isSubmitting}
-                    block
-                >
-                    Sign Up
-                </Button>
-            </Form>
+                        <Form.Item
+                            label="Підтвердження пароля"
+                            validateStatus={touched.confirmPassword && errors.confirmPassword ? "error" : ""}
+                            help={touched.confirmPassword && errors.confirmPassword ? errors.confirmPassword : ""}
+                        >
+                            <Input.Password name="confirmPassword" value={values.confirmPassword} onChange={handleChange} onBlur={handleBlur} />
+                        </Form.Item>
+
+                        <Button type="primary" htmlType="submit" loading={isLoading} block>
+                            Зареєструватися
+                        </Button>
+                    </Form>
+                )}
+            </Formik>
         </Modal>
     );
 };

@@ -1,70 +1,81 @@
 "use client";
 
 import React from "react";
-import { Modal, Form, Input, Button } from "antd";
-import { FormikProps } from "formik";
-import { LoginValues, LoginModalProps } from "@/app/types/LoginTypes";
+import { Modal, Form, Input, Button, message } from "antd";
+import { Formik } from "formik";
+import * as Yup from "yup";
+import { LoginModalProps, LoginValues } from "@/app/types/LoginTypes";
+import { useLoginMutation } from "@/lib/store/features/auth/authApi";
+import { useDispatch } from "react-redux";
+import { setCredentials } from "@/lib/store/features/auth/authSlice";
+import { useRouter } from "next/navigation";
 
-const LoginModal: React.FC<FormikProps<LoginValues> & LoginModalProps> = (props) => {
-    const {
-        values,
-        errors,
-        touched,
-        handleChange,
-        handleBlur,
-        handleSubmit,
-        isSubmitting,
-        isLoginModalOpened,
-        setIsLoginModalOpened,
-    } = props;
+const LoginModal: React.FC<LoginModalProps> = ({ isLoginModalOpened, setIsLoginModalOpened }) => {
+    const [login, { isLoading }] = useLoginMutation(); // RTK Query hook
+    const dispatch = useDispatch();
+    const router = useRouter();
 
-    const handleCancel = () => setIsLoginModalOpened(false);
+    const validationSchema = Yup.object({
+        email: Yup.string().email("Некоректна пошта").required("Обов'язкове поле"),
+        password: Yup.string().min(6).required("Обов'язкове поле"),
+    });
+
+    const handleSubmit = async (values: LoginValues) => {
+        try {
+            // 1. Робимо запит на бекенд
+            const userData = await login(values).unwrap();
+
+            // 2. Зберігаємо юзера в Redux
+            dispatch(setCredentials(userData.user));
+
+            // 3. Показуємо успіх
+            message.success("Вітаємо в системі!");
+            setIsLoginModalOpened(false);
+
+            // 4. Редірект в дашборд
+            router.push("/dashboard");
+
+        } catch (err: any) {
+            message.error(err?.data?.detail || "Помилка входу");
+        }
+    };
 
     return (
         <Modal
-            title="Sign In"
+            title="Вхід у систему"
             open={isLoginModalOpened}
-            onCancel={handleCancel}
+            onCancel={() => setIsLoginModalOpened(false)}
             footer={null}
         >
-            <Form layout="vertical" onFinish={handleSubmit}>
-                <Form.Item
-                    label="Email"
-                    validateStatus={touched.email && errors.email ? "error" : ""}
-                    help={touched.email && errors.email ? errors.email : ""}
-                >
-                    <Input
-                        name="email"
-                        placeholder="Enter your email"
-                        value={values.email}
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                    />
-                </Form.Item>
+            <Formik
+                initialValues={{ email: "", password: "" }}
+                validationSchema={validationSchema}
+                onSubmit={handleSubmit}
+            >
+                {({ values, errors, touched, handleChange, handleBlur, handleSubmit }) => (
+                    <Form layout="vertical" onFinish={handleSubmit}>
+                        <Form.Item
+                            label="Email"
+                            validateStatus={touched.email && errors.email ? "error" : ""}
+                            help={touched.email && errors.email ? errors.email : ""}
+                        >
+                            <Input name="email" value={values.email} onChange={handleChange} onBlur={handleBlur} />
+                        </Form.Item>
 
-                <Form.Item
-                    label="Password"
-                    validateStatus={touched.password && errors.password ? "error" : ""}
-                    help={touched.password && errors.password ? errors.password : ""}
-                >
-                    <Input.Password
-                        name="password"
-                        placeholder="Enter your password"
-                        value={values.password}
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                    />
-                </Form.Item>
+                        <Form.Item
+                            label="Password"
+                            validateStatus={touched.password && errors.password ? "error" : ""}
+                            help={touched.password && errors.password ? errors.password : ""}
+                        >
+                            <Input.Password name="password" value={values.password} onChange={handleChange} onBlur={handleBlur} />
+                        </Form.Item>
 
-                <Button
-                    type="primary"
-                    htmlType="submit"
-                    loading={isSubmitting}
-                    block
-                >
-                    Sign In
-                </Button>
-            </Form>
+                        <Button type="primary" htmlType="submit" loading={isLoading} block>
+                            Увійти
+                        </Button>
+                    </Form>
+                )}
+            </Formik>
         </Modal>
     );
 };

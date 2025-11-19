@@ -9,12 +9,15 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@reduxjs/toolkit": "^2.10.1",
     "@tailwindplus/elements": "^1.0.18",
     "antd": "^5.27.5",
+    "dayjs": "^1.11.19",
     "formik": "^2.4.6",
     "next": "15.5.4",
     "react": "19.1.0",
     "react-dom": "19.1.0",
+    "react-redux": "^9.2.0",
     "yup": "^1.7.1"
   },
   "devDependencies": {

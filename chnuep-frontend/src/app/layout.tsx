@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import StoreProvider from "./StoreProvider";
+import AuthPersist from "./components/AuthPersist";
 
 export const metadata: Metadata = {
   title: "CHNUEP",
@@ -16,7 +18,11 @@ export default function RootLayout({
       <body
         className="flex flex-col min-h-screen"
       >
-        {children}
+        <StoreProvider>
+          <AuthPersist>
+            {children}
+          </AuthPersist>
+        </StoreProvider>
       </body>
     </html>
   );
