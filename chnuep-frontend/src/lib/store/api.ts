@@ -6,6 +6,6 @@ export const api = createApi({
         baseUrl: 'http://localhost:8000', // backend
         credentials: 'include', // allows browser to process cookies
     }),
-    tagTypes: ['User', 'Courses', 'Assignments'], // Caching data about this user
+    tagTypes: ['User', 'Courses', 'Assignments', 'Submissions'], // Caching data about this user
     endpoints: () => ({}),
 });

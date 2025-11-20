@@ -3,59 +3,104 @@
 import React, { useState } from 'react';
 import { useParams } from 'next/navigation';
 import { Spin, Tabs, Button, List, Card, Tag, Empty } from 'antd';
-import { FileTextOutlined, PlusOutlined, CalendarOutlined, BookOutlined } from '@ant-design/icons';
+import { FileTextOutlined, PlusOutlined, CalendarOutlined, BookOutlined, UploadOutlined } from '@ant-design/icons';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/lib/store/store';
 import { useGetCourseByIdQuery, useGetAssignmentsByCourseQuery } from '@/lib/store/features/courses/coursesApi';
+
 import CreateAssignmentModal from '@/app/components/modals/create_assignment_modal';
+import SubmitAssignmentModal from '@/app/components/modals/submit_assignment_modal';
 
 export default function CoursePage() {
-    const { id } = useParams<{ id: string }>(); // Get ID from URL
+    const { id } = useParams<{ id: string }>();
+
     const { user } = useSelector((state: RootState) => state.auth);
 
-    // Requests to API
     const { data: course, isLoading: loadingCourse } = useGetCourseByIdQuery(id);
     const { data: assignments, isLoading: loadingAssignments } = useGetAssignmentsByCourseQuery(id);
 
-    const [isAssignmentModalOpen, setIsAssignmentModalOpen] = useState(false);
+    const [isCreateAssignmentOpen, setIsCreateAssignmentOpen] = useState(false);
+    const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
+    const [selectedAssignmentId, setSelectedAssignmentId] = useState<number | null>(null);
 
-    if (loadingCourse) return <div className="text-center mt-10"><Spin size="large" /></div>;
-    if (!course) return <div className="text-center mt-10">Курс не знайдено</div>;
+    if (loadingCourse) {
+        return (
+            <div className="flex justify-center items-center h-[50vh]">
+                <Spin size="large" tip="Завантаження курсу..." />
+            </div>
+        );
+    }
 
+    if (!course) {
+        return <div className="text-center mt-10 text-xl text-red-500">Курс не знайдено</div>;
+    }
+
+    // Check if current user is a member of specific course
     const isTeacher = user?.role === 'teacher' && user?.id === course.teacher_id;
+    const isStudent = user?.role === 'student';
 
-    // Assignments tab content
+    const handleOpenSubmit = (assignmentId: number) => {
+        setSelectedAssignmentId(assignmentId);
+        setIsSubmitModalOpen(true);
+    };
+
+    // Tasks tab
     const assignmentsTab = (
         <div>
+            {/* Teacher only */}
             {isTeacher && (
                 <div className="mb-4 flex justify-end">
-                    <Button type="primary" icon={<PlusOutlined />} onClick={() => setIsAssignmentModalOpen(true)}>
+                    <Button type="primary" icon={<PlusOutlined />} onClick={() => setIsCreateAssignmentOpen(true)}>
                         Додати завдання
                     </Button>
                 </div>
             )}
 
-            {loadingAssignments ? <Spin /> : assignments && assignments.length > 0 ? (
+            {loadingAssignments ? <div className="text-center py-4"><Spin /></div> : assignments && assignments.length > 0 ? (
                 <List
-                    grid={{ gutter: 16, column: 1 }}
+                    grid={{ gutter: 16, xs: 1, sm: 1, md: 1, lg: 1, xl: 1, xxl: 1 }}
                     dataSource={assignments}
                     renderItem={(item) => (
                         <List.Item>
                             <Card
-                                title={<span className="flex items-center gap-2"><FileTextOutlined /> {item.title}</span>}
-                                extra={isTeacher ? <Button type="link">Редагувати</Button> : <Tag color="blue">Здати роботу</Tag>}
+                                title={
+                                    <div className="flex items-center gap-2">
+                                        <FileTextOutlined className="text-blue-500" />
+                                        <span>{item.title}</span>
+                                    </div>
+                                }
+                                extra={
+                                    isTeacher ? (
+                                        <Button type="link">Редагувати</Button>
+                                    ) : isStudent ? (
+                                        <Button
+                                            type="primary"
+                                            ghost
+                                            icon={<UploadOutlined />}
+                                            onClick={() => handleOpenSubmit(item.id)}
+                                        >
+                                            Здати роботу
+                                        </Button>
+                                    ) : null
+                                }
                             >
-                                <p className="text-gray-600 mb-4">{item.description}</p>
-                                <div className="flex justify-between text-gray-500 text-sm">
-                                    <span>Макс. бал: {item.max_grade}</span>
-                                    {item.due_date && <span><CalendarOutlined /> Дедлайн: {new Date(item.due_date).toLocaleDateString()}</span>}
+                                <p className="text-gray-700 mb-4 whitespace-pre-wrap">{item.description}</p>
+
+                                <div className="flex flex-wrap gap-4 text-gray-500 text-sm pt-4 border-t border-gray-100">
+                                    <Tag color="blue">Макс. бал: {item.max_grade}</Tag>
+                                    {item.due_date && (
+                                        <span className="flex items-center gap-1">
+                                            <CalendarOutlined />
+                                            Дедлайн: {new Date(item.due_date).toLocaleString()}
+                                        </span>
+                                    )}
                                 </div>
                             </Card>
                         </List.Item>
                     )}
                 />
             ) : (
-                <Empty description="Завдань поки немає" />
+                <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Завдань поки немає" />
             )}
         </div>
     );
@@ -64,7 +109,7 @@ export default function CoursePage() {
         {
             key: '1',
             label: 'Матеріали курсу',
-            children: <div className="p-4"><Empty description="Матеріали відсутні (В розробці)" /></div>,
+            children: <div className="p-8 text-center text-gray-500 bg-white rounded-lg">Матеріали відсутні (В розробці)</div>,
         },
         {
             key: '2',
@@ -74,28 +119,39 @@ export default function CoursePage() {
         {
             key: '3',
             label: 'Учасники',
-            children: <div className="p-4">Список студентів (В розробці)</div>,
+            children: <div className="p-8 text-center text-gray-500 bg-white rounded-lg">Список учасників (В розробці)</div>,
         },
     ];
 
     return (
-        <div>
-            {/* Course title */}
-            <div className="bg-white p-6 rounded-lg shadow-sm mb-6 border-l-4 border-blue-500">
-                <h1 className="text-3xl font-bold mb-2 flex items-center gap-2">
+        <div className="max-w-5xl mx-auto">
+            <div className="bg-white p-6 rounded-lg shadow-sm mb-6 border-l-4 border-blue-600">
+                <h1 className="text-3xl font-bold mb-2 flex items-center gap-3 text-gray-800">
                     <BookOutlined /> {course.title}
                 </h1>
-                <p className="text-gray-600 text-lg">{course.description}</p>
+                <p className="text-gray-600 text-lg mt-2">{course.description}</p>
             </div>
 
-            {/* Tabs */}
-            <Tabs defaultActiveKey="2" items={items} type="card" />
 
-            <CreateAssignmentModal
-                isOpen={isAssignmentModalOpen}
-                onClose={() => setIsAssignmentModalOpen(false)}
-                courseId={Number(id)}
-            />
+            <Tabs defaultActiveKey="2" items={items} type="card" size="large" />
+
+            {/* For teacher: create task */}
+            {isTeacher && (
+                <CreateAssignmentModal
+                    isOpen={isCreateAssignmentOpen}
+                    onClose={() => setIsCreateAssignmentOpen(false)}
+                    courseId={Number(id)}
+                />
+            )}
+
+            {/* For student: submit his work */}
+            {selectedAssignmentId && (
+                <SubmitAssignmentModal
+                    isOpen={isSubmitModalOpen}
+                    onClose={() => setIsSubmitModalOpen(false)}
+                    assignmentId={selectedAssignmentId}
+                />
+            )}
         </div>
     );
 }

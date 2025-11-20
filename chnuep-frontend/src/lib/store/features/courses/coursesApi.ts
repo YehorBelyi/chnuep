@@ -16,6 +16,14 @@ export interface Assignment {
     due_date?: string;
 }
 
+export interface Submission {
+    id: number;
+    file_url: string;
+    student_comment?: string;
+    grade?: number;
+    submitted_at: string;
+}
+
 export const coursesApi = api.injectEndpoints({
     endpoints: (builder) => ({
         // Create course
@@ -53,6 +61,25 @@ export const coursesApi = api.injectEndpoints({
             query: (courseId) => `/assignments/course/${courseId}`,
             providesTags: ['Assignments'],
         }),
+
+        submitAssignment: builder.mutation<Submission, { assignmentId: number; file: File; comment: string }>({
+            query: ({ assignmentId, file, comment }) => {
+                const formData = new FormData();
+                formData.append('file', file);
+                if (comment) formData.append('student_comment', comment);
+
+                return {
+                    url: `/submissions/${assignmentId}`,
+                    method: 'POST',
+                    body: formData,
+                };
+            },
+            invalidatesTags: ['Submissions'],
+        }),
+        getMySubmission: builder.query<Submission | null, number>({
+            query: (assignmentId) => `/submissions/my/${assignmentId}`,
+            providesTags: ['Submissions'],
+        }),
     }),
 });
 
@@ -62,5 +89,7 @@ export const {
     useGetAllCoursesQuery,
     useGetCourseByIdQuery,
     useCreateAssignmentMutation,
-    useGetAssignmentsByCourseQuery
+    useGetAssignmentsByCourseQuery,
+    useSubmitAssignmentMutation,
+    useGetMySubmissionQuery,
 } = coursesApi;

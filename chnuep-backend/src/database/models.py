@@ -74,6 +74,7 @@ class Submission(Base):
     grade: Mapped[Optional[int]] = mapped_column(nullable=True)
     teacher_comment: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     submitted_at: Mapped[datetime] = mapped_column(default=func.now())
+    status: Mapped[str] = mapped_column(String(50), default="submitted")
 
     student: Mapped["User"] = relationship(back_populates="submissions")
     assignment: Mapped["Assignment"] = relationship(back_populates="submissions")

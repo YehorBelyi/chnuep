@@ -9,6 +9,7 @@ from database.models import User, UserRole
 from repositories.assignments import AssignmentRepository
 from repositories.courses import CourseRepository
 from repositories.users import UserRepository
+from repositories.submissions import SubmissionRepository
 
 # Configuring AuthX
 config = AuthXConfig()
@@ -39,6 +40,12 @@ async def get_assignment_repo(session: SessionDependency) -> AssignmentRepositor
     return AssignmentRepository(session)
 
 AssignmentRepoDependency = Annotated[AssignmentRepository, Depends(get_assignment_repo)]
+
+
+async def get_submission_repo(session: SessionDependency) -> SubmissionRepository:
+    return SubmissionRepository(session)
+
+SubmissionRepoDependency = Annotated[SubmissionRepository, Depends(get_submission_repo)]
 
 # Authorization dependency
 
