@@ -1,25 +1,24 @@
 "use client";
 import { Card, Col, Row, Statistic, Progress, Spin, Empty, Button } from 'antd';
 import { BookOutlined, CheckCircleOutlined, ClockCircleOutlined, ArrowRightOutlined } from '@ant-design/icons';
-import { useGetAllCoursesQuery } from '@/lib/store/features/courses/coursesApi';
+import { useGetMyCoursesQuery } from '@/lib/store/features/courses/coursesApi';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
 export default function StudentView({ user }: { user: any }) {
     const router = useRouter();
 
-    // 1. Отримуємо ВСІ курси з бекенду
-    const { data: courses, isLoading } = useGetAllCoursesQuery();
+    const { data: myCourses, isLoading } = useGetMyCoursesQuery();
 
     return (
         <div>
             <h2 className="text-2xl font-bold mb-6">Вітаємо, {user.full_name}! 👋</h2>
 
-            {/* Статистика (поки що статична, це нормально для цього етапу) */}
+            {/* Users stats */}
             <Row gutter={16} className="mb-8">
                 <Col span={8}>
                     <Card bordered={false} className="bg-blue-50">
-                        <Statistic title="Доступних курсів" value={courses?.length || 0} prefix={<BookOutlined />} />
+                        <Statistic title="Доступних курсів" value={myCourses?.length || 0} prefix={<BookOutlined />} />
                     </Card>
                 </Col>
                 <Col span={8}>
@@ -36,12 +35,12 @@ export default function StudentView({ user }: { user: any }) {
 
             <h3 className="text-xl font-semibold mb-4">Всі доступні курси</h3>
 
-            {/* 2. Логіка відображення курсів */}
+            {/* Rendering available courses for students */}
             {isLoading ? (
                 <div className="text-center py-10"><Spin size="large" /></div>
-            ) : courses && courses.length > 0 ? (
+            ) : myCourses && myCourses.length > 0 ? (
                 <Row gutter={[16, 16]}>
-                    {courses.map((course) => (
+                    {myCourses.map((course) => (
                         <Col xs={24} sm={12} md={8} lg={6} key={course.id}>
                             <Card
                                 hoverable
@@ -62,7 +61,6 @@ export default function StudentView({ user }: { user: any }) {
                                             <div className="h-10 overflow-hidden text-ellipsis mb-2 text-gray-500">
                                                 {course.description}
                                             </div>
-                                            {/* Прогрес поки фейковий, бо немає Enrollments */}
                                             <Progress percent={0} size="small" status="active" />
                                         </div>
                                     }

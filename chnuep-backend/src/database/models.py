@@ -76,5 +76,6 @@ class Submission(Base):
     submitted_at: Mapped[datetime] = mapped_column(default=func.now())
     status: Mapped[str] = mapped_column(String(50), default="submitted")
 
-    student: Mapped["User"] = relationship(back_populates="submissions")
+    # selectin forces database to load info about this users automatically
+    student: Mapped["User"] = relationship(back_populates="submissions", lazy="selectin")
     assignment: Mapped["Assignment"] = relationship(back_populates="submissions")

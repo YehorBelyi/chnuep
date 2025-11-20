@@ -1,4 +1,5 @@
 import { api } from '../../api';
+import { User } from '../auth/authSlice';
 
 export interface Course {
     id: number;
@@ -21,7 +22,14 @@ export interface Submission {
     file_url: string;
     student_comment?: string;
     grade?: number;
+    teacher_comment?: string;
+    status: string;
     submitted_at: string;
+    student?: {
+        full_name: string;
+        email: string;
+        avatar_url?: string;
+    };
 }
 
 export const coursesApi = api.injectEndpoints({
@@ -80,6 +88,39 @@ export const coursesApi = api.injectEndpoints({
             query: (assignmentId) => `/submissions/my/${assignmentId}`,
             providesTags: ['Submissions'],
         }),
+        getSubmissionsForAssignment: builder.query<Submission[], number>({
+            query: (assignmentId) => `/submissions/assignment/${assignmentId}`,
+            providesTags: ['Submissions'],
+        }),
+        // Mark users submission
+        gradeSubmission: builder.mutation<Submission, { id: number; grade: number; comment: string }>({
+            query: ({ id, grade, comment }) => ({
+                url: `/submissions/${id}`,
+                method: 'PATCH',
+                body: { grade, teacher_comment: comment },
+            }),
+            invalidatesTags: ['Submissions'],
+        }),
+        // Enroll student (ADMIN)
+        adminEnrollStudent: builder.mutation<void, { studentId: number; courseId: number }>({
+            query: (body) => ({
+                url: '/enrollments/',
+                method: 'POST',
+                body: { student_id: body.studentId, course_id: body.courseId },
+            }),
+            invalidatesTags: ['Enrollments'],
+        }),
+
+        // Get list of students on this course
+        getCourseStudents: builder.query<User[], number>({
+            query: (courseId) => `/enrollments/${courseId}/students`,
+            providesTags: ['Enrollments'],
+        }),
+
+        // Get all students
+        getAllStudents: builder.query<User[], void>({
+            query: () => '/students',
+        }),
     }),
 });
 
@@ -92,4 +133,9 @@ export const {
     useGetAssignmentsByCourseQuery,
     useSubmitAssignmentMutation,
     useGetMySubmissionQuery,
+    useGetSubmissionsForAssignmentQuery,
+    useGradeSubmissionMutation,
+    useAdminEnrollStudentMutation,
+    useGetCourseStudentsQuery,
+    useGetAllStudentsQuery
 } = coursesApi;

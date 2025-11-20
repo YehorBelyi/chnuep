@@ -2,14 +2,16 @@ import os
 import uuid
 import shutil
 from fastapi import APIRouter, Depends, status, HTTPException, UploadFile, File, Form
-from typing import Optional
+from typing import Optional, List
 
 from api.dependencies import (
     SubmissionRepoDependency,
     AssignmentRepoDependency,
-    CurrentUserDependency
+    CurrentUserDependency,
+    TeacherUserDependency
 )
-from schemas.submissions import SubmissionResponseSchema
+from schemas.submissions import SubmissionResponseSchema, SubmissionGradeSchema
+from sqlalchemy.orm import selectinload
 
 router = APIRouter()
 
@@ -71,3 +73,38 @@ async def get_my_submission(
         user: CurrentUserDependency
 ):
     return await submission_repo.get_by_assignment_and_student(assignment_id, user.id)
+
+
+@router.get("/assignment/{assignment_id}", response_model=List[SubmissionResponseSchema])
+async def get_all_submissions(
+        assignment_id: int,
+        submission_repo: SubmissionRepoDependency,
+        assignment_repo: AssignmentRepoDependency,
+        user: TeacherUserDependency  # Only teacher can do this
+):
+    # Check whether teacher owns this course
+    assignment = await assignment_repo.get_by_id(assignment_id)
+    if not assignment:
+        raise HTTPException(status_code=404, detail="Assignment not found")
+
+    return await submission_repo.get_by_assignment(assignment_id)
+
+
+@router.patch("/{submission_id}", response_model=SubmissionResponseSchema)
+async def grade_submission(
+        submission_id: int,
+        grade_data: SubmissionGradeSchema,
+        submission_repo: SubmissionRepoDependency,
+        user: TeacherUserDependency
+):
+    submission = await submission_repo.get_by_id(submission_id)
+    if not submission:
+        raise HTTPException(status_code=404, detail="Submission not found")
+
+    update_data = grade_data.model_dump()
+    update_data["status"] = "graded"
+
+    updated_submission = await submission_repo.update(submission_id, update_data)
+    await submission_repo.session.commit()
+
+    return updated_submission

@@ -1,4 +1,6 @@
-from fastapi import APIRouter, HTTPException, Response, status
+from typing import List
+
+from fastapi import APIRouter, HTTPException, Response, status, Depends
 from authx import AuthX
 
 from schemas.auth import UserLoginSchema, UserRegisterSchema, UserResponseSchema
@@ -6,7 +8,9 @@ from utils.security import verify_password, get_password_hash
 from api.dependencies import (
     security,
     UserRepoDependency,
-    CurrentUserDependency
+    CurrentUserDependency,
+    verify_admin_role,
+    AdminUserDependency
 )
 
 router = APIRouter()
@@ -102,3 +106,10 @@ async def get_me(user: CurrentUserDependency):
             detail="Incorrect email or password"
         )
     return user
+
+@router.get("/students", response_model=List[UserResponseSchema])
+async def get_all_students(
+    user_repo: UserRepoDependency,
+    admin: AdminUserDependency
+):
+    return await user_repo.get_all_students()

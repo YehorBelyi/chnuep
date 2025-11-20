@@ -47,6 +47,13 @@ async def get_submission_repo(session: SessionDependency) -> SubmissionRepositor
 
 SubmissionRepoDependency = Annotated[SubmissionRepository, Depends(get_submission_repo)]
 
+from repositories.enrollments import EnrollmentRepository
+
+async def get_enrollment_repo(session: SessionDependency) -> EnrollmentRepository:
+    return EnrollmentRepository(session)
+
+EnrollmentRepoDependency = Annotated[EnrollmentRepository, Depends(get_enrollment_repo)]
+
 # Authorization dependency
 
 async def get_current_user_id(payload = Depends(security.access_token_required)) -> int:
@@ -93,3 +100,5 @@ async def verify_admin_role(user: CurrentUserDependency) -> User:
     return user
 
 TeacherUserDependency = Annotated[User, Depends(verify_teacher_role)]
+
+AdminUserDependency = Annotated[User, Depends(verify_admin_role)]

@@ -10,6 +10,8 @@ import { useGetCourseByIdQuery, useGetAssignmentsByCourseQuery } from '@/lib/sto
 
 import CreateAssignmentModal from '@/app/components/modals/create_assignment_modal';
 import SubmitAssignmentModal from '@/app/components/modals/submit_assignment_modal';
+import TeacherGradingModal from '@/app/components/modals/teacher_grading_modal';
+import AdminEnrollmentModal from '@/app/components/modals/admin_enrollment_modal';
 
 export default function CoursePage() {
     const { id } = useParams<{ id: string }>();
@@ -19,9 +21,18 @@ export default function CoursePage() {
     const { data: course, isLoading: loadingCourse } = useGetCourseByIdQuery(id);
     const { data: assignments, isLoading: loadingAssignments } = useGetAssignmentsByCourseQuery(id);
 
+    // Admin
+    const isAdmin = user?.role === 'admin';
+    const [isAdminEnrollModalOpen, setIsAdminEnrollModalOpen] = useState(false);
+
+    // Assignment
     const [isCreateAssignmentOpen, setIsCreateAssignmentOpen] = useState(false);
     const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
     const [selectedAssignmentId, setSelectedAssignmentId] = useState<number | null>(null);
+
+    // Grading
+    const [isGradingModalOpen, setIsGradingModalOpen] = useState(false);
+    const [gradingAssignment, setGradingAssignment] = useState<{ id: number, title: string } | null>(null);
 
     if (loadingCourse) {
         return (
@@ -42,6 +53,11 @@ export default function CoursePage() {
     const handleOpenSubmit = (assignmentId: number) => {
         setSelectedAssignmentId(assignmentId);
         setIsSubmitModalOpen(true);
+    };
+
+    const handleOpenGrading = (assignment: any) => {
+        setGradingAssignment({ id: assignment.id, title: assignment.title });
+        setIsGradingModalOpen(true);
     };
 
     // Tasks tab
@@ -71,7 +87,10 @@ export default function CoursePage() {
                                 }
                                 extra={
                                     isTeacher ? (
-                                        <Button type="link">Редагувати</Button>
+                                        <div className="flex gap-2">
+                                            <Button onClick={() => handleOpenGrading(item)}>Переглянути роботи</Button>
+                                            <Button type="link">Редагувати</Button>
+                                        </div>
                                     ) : isStudent ? (
                                         <Button
                                             type="primary"
@@ -119,7 +138,22 @@ export default function CoursePage() {
         {
             key: '3',
             label: 'Учасники',
-            children: <div className="p-8 text-center text-gray-500 bg-white rounded-lg">Список учасників (В розробці)</div>,
+            children: (
+                <div className="p-4">
+                    {isAdmin ? (
+                        <div className="text-center">
+                            <p className="mb-4 text-gray-500">Керування доступом студентів до цього курсу.</p>
+                            <Button type="primary" onClick={() => setIsAdminEnrollModalOpen(true)}>
+                                Керувати учасниками
+                            </Button>
+                        </div>
+                    ) : (
+                        <div className="text-center text-gray-500">
+                            Тут буде список ваших одногрупників.
+                        </div>
+                    )}
+                </div>
+            ),
         },
     ];
 
@@ -150,6 +184,24 @@ export default function CoursePage() {
                     isOpen={isSubmitModalOpen}
                     onClose={() => setIsSubmitModalOpen(false)}
                     assignmentId={selectedAssignmentId}
+                />
+            )}
+
+            {/* For teacher */}
+            {gradingAssignment && (
+                <TeacherGradingModal
+                    isOpen={isGradingModalOpen}
+                    onClose={() => setIsGradingModalOpen(false)}
+                    assignmentId={gradingAssignment.id}
+                    assignmentTitle={gradingAssignment.title}
+                />
+            )}
+
+            {isAdmin && (
+                <AdminEnrollmentModal
+                    isOpen={isAdminEnrollModalOpen}
+                    onClose={() => setIsAdminEnrollModalOpen(false)}
+                    courseId={Number(id)}
                 />
             )}
         </div>
