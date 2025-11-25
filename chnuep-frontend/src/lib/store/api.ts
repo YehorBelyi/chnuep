@@ -6,6 +6,7 @@ export const api = createApi({
         baseUrl: 'http://localhost:8000', // backend
         credentials: 'include', // allows browser to process cookies
     }),
-    tagTypes: ['User', 'Courses', 'Assignments', 'Submissions', 'Enrollments'], // Caching data about this user
+    refetchOnMountOrArgChange: true, // forces Redux to update data every time component mounts
+    tagTypes: ['User', 'Courses', 'Assignments', 'Submissions', 'Enrollments', 'Materials'], // Caching data about this user
     endpoints: () => ({}),
 });

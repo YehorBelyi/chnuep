@@ -2,11 +2,12 @@
 
 import React, { useState } from 'react';
 import { useParams } from 'next/navigation';
-import { Spin, Tabs, Button, List, Card, Tag, Empty } from 'antd';
+import { Spin, Tabs, Button, List, Card, Tag, Empty, Upload } from 'antd';
+import { FilePdfOutlined } from '@ant-design/icons';
 import { FileTextOutlined, PlusOutlined, CalendarOutlined, BookOutlined, UploadOutlined } from '@ant-design/icons';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/lib/store/store';
-import { useGetCourseByIdQuery, useGetAssignmentsByCourseQuery } from '@/lib/store/features/courses/coursesApi';
+import { useGetCourseByIdQuery, useGetAssignmentsByCourseQuery, useGetMaterialsQuery, useUploadMaterialMutation } from '@/lib/store/features/courses/coursesApi';
 
 import CreateAssignmentModal from '@/app/components/modals/create_assignment_modal';
 import SubmitAssignmentModal from '@/app/components/modals/submit_assignment_modal';
@@ -33,6 +34,16 @@ export default function CoursePage() {
     // Grading
     const [isGradingModalOpen, setIsGradingModalOpen] = useState(false);
     const [gradingAssignment, setGradingAssignment] = useState<{ id: number, title: string } | null>(null);
+
+    // For teacher to upload course materials
+    const { data: materials } = useGetMaterialsQuery(Number(id));
+    const [uploadMaterial] = useUploadMaterialMutation();
+
+    const handleUploadMaterial = async (options: any) => {
+        const { file, onSuccess } = options;
+        await uploadMaterial({ courseId: Number(id), title: file.name, file });
+        onSuccess("Ok");
+    };
 
     if (loadingCourse) {
         return (
@@ -124,11 +135,35 @@ export default function CoursePage() {
         </div>
     );
 
+    const materialsTab = (
+        <div className="p-4">
+            {isTeacher && (
+                <div className="mb-6 border-b pb-4">
+                    <h3 className="mb-2 font-bold">Додати матеріал</h3>
+                    <Upload customRequest={handleUploadMaterial} showUploadList={false}>
+                        <Button icon={<UploadOutlined />}>Завантажити файл</Button>
+                    </Upload>
+                </div>
+            )}
+            <List
+                dataSource={materials}
+                renderItem={item => (
+                    <List.Item actions={[<a href={`http://localhost:8000${item.file_url}`} target="_blank">Завантажити</a>]}>
+                        <List.Item.Meta
+                            avatar={<FilePdfOutlined className="text-2xl text-red-500" />}
+                            title={item.title}
+                        />
+                    </List.Item>
+                )}
+            />
+        </div>
+    );
+
     const items = [
         {
             key: '1',
             label: 'Матеріали курсу',
-            children: <div className="p-8 text-center text-gray-500 bg-white rounded-lg">Матеріали відсутні (В розробці)</div>,
+            children: materialsTab,
         },
         {
             key: '2',

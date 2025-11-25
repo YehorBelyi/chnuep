@@ -17,17 +17,17 @@ export default function StudentView({ user }: { user: any }) {
             {/* Users stats */}
             <Row gutter={16} className="mb-8">
                 <Col span={8}>
-                    <Card bordered={false} className="bg-blue-50">
+                    <Card variant='borderless' className="bg-blue-50">
                         <Statistic title="Доступних курсів" value={myCourses?.length || 0} prefix={<BookOutlined />} />
                     </Card>
                 </Col>
                 <Col span={8}>
-                    <Card bordered={false} className="bg-green-50">
+                    <Card variant='borderless' className="bg-green-50">
                         <Statistic title="Здані роботи" value={0} prefix={<CheckCircleOutlined />} />
                     </Card>
                 </Col>
                 <Col span={8}>
-                    <Card bordered={false} className="bg-orange-50">
+                    <Card variant='borderless' className="bg-orange-50">
                         <Statistic title="Середній бал" value={0} suffix="/ 100" />
                     </Card>
                 </Col>

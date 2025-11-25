@@ -79,3 +79,15 @@ class Submission(Base):
     # selectin forces database to load info about this users automatically
     student: Mapped["User"] = relationship(back_populates="submissions", lazy="selectin")
     assignment: Mapped["Assignment"] = relationship(back_populates="submissions")
+
+# For teachers to publish materials for specifis courses
+class Material(Base):
+    __tablename__ = "materials"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    title: Mapped[str] = mapped_column(String(200))
+    course_id: Mapped[int] = mapped_column(ForeignKey("courses.id"))
+    file_url: Mapped[str] = mapped_column(String(500))
+    uploaded_at: Mapped[datetime] = mapped_column(default=func.now())
+
+    course: Mapped["Course"] = relationship()

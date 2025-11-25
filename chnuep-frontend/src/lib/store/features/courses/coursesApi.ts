@@ -121,6 +121,23 @@ export const coursesApi = api.injectEndpoints({
         getAllStudents: builder.query<User[], void>({
             query: () => '/students',
         }),
+        getMaterials: builder.query<{ id: number, title: string, file_url: string }[], number>({
+            query: (courseId) => `/materials/${courseId}`,
+            providesTags: ['Materials'],
+        }),
+        uploadMaterial: builder.mutation<void, { courseId: number, title: string, file: File }>({
+            query: ({ courseId, title, file }) => {
+                const formData = new FormData();
+                formData.append('title', title);
+                formData.append('file', file);
+                return {
+                    url: `/materials/${courseId}`,
+                    method: 'POST',
+                    body: formData,
+                };
+            },
+            invalidatesTags: ['Materials'],
+        }),
     }),
 });
 
@@ -137,5 +154,7 @@ export const {
     useGradeSubmissionMutation,
     useAdminEnrollStudentMutation,
     useGetCourseStudentsQuery,
-    useGetAllStudentsQuery
+    useGetAllStudentsQuery,
+    useGetMaterialsQuery,
+    useUploadMaterialMutation
 } = coursesApi;

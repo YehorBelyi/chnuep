@@ -8,8 +8,6 @@ import { UserOutlined, LogoutOutlined, DashboardOutlined } from "@ant-design/ico
 import { useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
-
-// Імпортуємо модалки напряму (старі Processing файли видалити!)
 import LoginModal from "../modals/login_modal";
 import RegisterModal from "../modals/register_modal";
 
@@ -17,6 +15,7 @@ import RegisterModal from "../modals/register_modal";
 import { RootState } from "@/lib/store/store";
 import { useLogoutMutation } from "@/lib/store/features/auth/authApi";
 import { logout as logoutAction } from "@/lib/store/features/auth/authSlice";
+import { api } from "@/lib/store/api";
 
 const Header: React.FC = () => {
     const [isLoginModalOpened, setIsLoginModalOpened] = useState(false);
@@ -30,12 +29,16 @@ const Header: React.FC = () => {
 
     const handleLogout = async () => {
         try {
-            await logoutApi().unwrap(); // Request to API
-            dispatch(logoutAction()); // Clean redux store
-            router.push("/"); // Redirect to home
+            // request to API to clear http only cookies
+            await logoutApi().unwrap();
         } catch (error) {
             console.error("Logout failed", error);
         }
+        // clear user data
+        dispatch(logoutAction());
+        // clear cached data
+        dispatch(api.util.resetApiState());
+        router.push("/");
     };
 
     // Menu for authenticated user
