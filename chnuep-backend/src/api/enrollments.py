@@ -9,6 +9,7 @@ from api.dependencies import (
     CurrentUserDependency,
     AdminUserDependency
 )
+from database.models import UserRole
 from schemas.enrollments import EnrollmentCreateSchema
 from schemas.auth import UserResponseSchema
 
@@ -49,6 +50,19 @@ async def enroll_student(
 async def get_course_students(
         course_id: int,
         enrollment_repo: EnrollmentRepoDependency,
+        course_repo: CourseRepoDependency,
         user: CurrentUserDependency
 ):
+    is_admin = user.role == UserRole.ADMIN
+
+    course = await course_repo.get_by_id(course_id)
+    if not course:
+        raise HTTPException(404, "Course not found")
+
+    is_teacher = course.teacher_id == user.id
+    is_enrolled = await enrollment_repo.is_enrolled(user.id, course_id)
+
+    if not (is_admin or is_teacher or is_enrolled):
+        raise HTTPException(403, "Access denied")
+
     return await enrollment_repo.get_students_by_course(course_id)

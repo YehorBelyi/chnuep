@@ -1,6 +1,7 @@
 import { api } from '../../api';
 import { LoginValues } from '@/app/types/LoginTypes';
 import { RegisterValues } from '@/app/types/RegisterTypes';
+import { User } from './authSlice';
 
 export const authApi = api.injectEndpoints({
     endpoints: (builder) => ({
@@ -27,6 +28,13 @@ export const authApi = api.injectEndpoints({
         getMe: builder.query<any, void>({
             query: () => '/me',
         }),
+        updateProfile: builder.mutation<User, { full_name: string }>({
+            query: (body) => ({
+                url: '/users/me',
+                method: 'PUT',
+                body,
+            }),
+        }),
     }),
 });
 
@@ -34,5 +42,6 @@ export const {
     useLoginMutation,
     useRegisterMutation,
     useLogoutMutation,
-    useGetMeQuery
+    useGetMeQuery,
+    useUpdateProfileMutation
 } = authApi;

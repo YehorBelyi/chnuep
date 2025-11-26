@@ -4,10 +4,12 @@ import React, { useState } from 'react';
 import { useParams } from 'next/navigation';
 import { Spin, Tabs, Button, List, Card, Tag, Empty, Upload } from 'antd';
 import { FilePdfOutlined } from '@ant-design/icons';
-import { FileTextOutlined, PlusOutlined, CalendarOutlined, BookOutlined, UploadOutlined } from '@ant-design/icons';
+import { FileTextOutlined, PlusOutlined, CalendarOutlined, BookOutlined, UploadOutlined, UserOutlined } from '@ant-design/icons';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/lib/store/store';
-import { useGetCourseByIdQuery, useGetAssignmentsByCourseQuery, useGetMaterialsQuery, useUploadMaterialMutation } from '@/lib/store/features/courses/coursesApi';
+import { useGetCourseByIdQuery, useGetAssignmentsByCourseQuery, useGetMaterialsQuery, useUploadMaterialMutation, useGetCourseStudentsQuery } from '@/lib/store/features/courses/coursesApi';
+import Link from 'next/link';
+import Avatar from 'antd/es/avatar/Avatar';
 
 import CreateAssignmentModal from '@/app/components/modals/create_assignment_modal';
 import SubmitAssignmentModal from '@/app/components/modals/submit_assignment_modal';
@@ -21,6 +23,7 @@ export default function CoursePage() {
 
     const { data: course, isLoading: loadingCourse } = useGetCourseByIdQuery(id);
     const { data: assignments, isLoading: loadingAssignments } = useGetAssignmentsByCourseQuery(id);
+    const { data: studentsList } = useGetCourseStudentsQuery(Number(id));
 
     // Admin
     const isAdmin = user?.role === 'admin';
@@ -183,9 +186,18 @@ export default function CoursePage() {
                             </Button>
                         </div>
                     ) : (
-                        <div className="text-center text-gray-500">
-                            Тут буде список ваших одногрупників.
-                        </div>
+                        <List
+                            dataSource={studentsList}
+                            renderItem={student => (
+                                <List.Item>
+                                    <List.Item.Meta
+                                        avatar={<Avatar src={student.avatar_url} icon={<UserOutlined />} />}
+                                        title={<Link href={`/dashboard/profile/${student.id}`}>{student.full_name}</Link>}
+                                        description={student.role === 'student' ? 'Студент' : 'Викладач'}
+                                    />
+                                </List.Item>
+                            )}
+                        />
                     )}
                 </div>
             ),
