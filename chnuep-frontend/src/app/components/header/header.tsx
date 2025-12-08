@@ -10,6 +10,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
 import LoginModal from "../modals/login_modal";
 import RegisterModal from "../modals/register_modal";
+import NotificationBell from "./NotificationBell";
 
 // Redux imports
 import { RootState } from "@/lib/store/store";
@@ -89,6 +90,7 @@ const Header: React.FC = () => {
 
                         {isAuthenticated && user ? (
                             // If current user is authenticated
+
                             <Dropdown menu={{ items: userMenuItems }} trigger={['click']}>
                                 <Space className="cursor-pointer hover:bg-gray-100 p-2 rounded-lg transition">
                                     <Avatar

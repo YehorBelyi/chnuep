@@ -5,7 +5,7 @@ print("-----------------> COURSES ROUTER LOADED <-----------------")
 from fastapi import APIRouter, Depends, status, HTTPException
 from typing import List
 
-from schemas.courses import CourseCreateSchema, CourseResponseSchema
+from schemas.courses import CourseCreateSchema, CourseResponseSchema, CourseUpdateSchema
 from api.dependencies import (
     CourseRepoDependency,
     TeacherUserDependency,
@@ -83,3 +83,38 @@ async def get_course_details(
         return course
 
     return course
+
+@router.put("/{course_id}", response_model=CourseResponseSchema)
+async def update_course(
+    course_id: int,
+    course_data: CourseUpdateSchema,
+    course_repo: CourseRepoDependency,
+    user: CurrentUserDependency
+):
+    course = await course_repo.get_by_id(course_id)
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found")
+
+    if user.role != UserRole.ADMIN and course.teacher_id != user.id:
+        raise HTTPException(status_code=403, detail="Not authorized to edit this course")
+
+    updated_course = await course_repo.update(course_id, course_data.model_dump())
+    await course_repo.session.commit()
+    return updated_course
+
+@router.delete("/{course_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_course(
+    course_id: int,
+    course_repo: CourseRepoDependency,
+    user: CurrentUserDependency
+):
+    course = await course_repo.get_by_id(course_id)
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found")
+
+    if user.role != UserRole.ADMIN and course.teacher_id != user.id:
+        raise HTTPException(status_code=403, detail="Not authorized to delete this course")
+
+    await course_repo.delete(course_id)
+    await course_repo.session.commit()
+    return None

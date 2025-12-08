@@ -1,7 +1,7 @@
 import enum
 from datetime import datetime
 from typing import List, Optional
-from sqlalchemy import ForeignKey, String, Text, DateTime, Enum as SqEnum
+from sqlalchemy import ForeignKey, String, Text, DateTime, Enum as SqEnum, Boolean
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
@@ -91,3 +91,14 @@ class Material(Base):
     uploaded_at: Mapped[datetime] = mapped_column(default=func.now())
 
     course: Mapped["Course"] = relationship()
+
+class Notification(Base):
+    __tablename__ = "notifications"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    message: Mapped[str] = mapped_column(Text)
+    is_read: Mapped[bool] = mapped_column(Boolean, default=False)
+    created_at: Mapped[datetime] = mapped_column(default=func.now())
+
+    user: Mapped["User"] = relationship()

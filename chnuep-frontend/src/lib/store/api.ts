@@ -4,6 +4,7 @@ export const api = createApi({
     reducerPath: 'api',
     baseQuery: fetchBaseQuery({
         baseUrl: 'http://localhost:8000', // backend
+        // baseUrl: '/api',
         credentials: 'include', // allows browser to process cookies
     }),
     refetchOnMountOrArgChange: true, // forces Redux to update data every time component mounts

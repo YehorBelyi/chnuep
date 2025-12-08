@@ -2,12 +2,12 @@
 
 import React, { useState } from 'react';
 import { useParams } from 'next/navigation';
-import { Spin, Tabs, Button, List, Card, Tag, Empty, Upload } from 'antd';
+import { Spin, Tabs, Button, List, Card, Tag, Empty, Upload, Popconfirm, message } from 'antd';
 import { FilePdfOutlined } from '@ant-design/icons';
-import { FileTextOutlined, PlusOutlined, CalendarOutlined, BookOutlined, UploadOutlined, UserOutlined } from '@ant-design/icons';
+import { FileTextOutlined, PlusOutlined, CalendarOutlined, BookOutlined, UploadOutlined, UserOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/lib/store/store';
-import { useGetCourseByIdQuery, useGetAssignmentsByCourseQuery, useGetMaterialsQuery, useUploadMaterialMutation, useGetCourseStudentsQuery } from '@/lib/store/features/courses/coursesApi';
+import { useGetCourseByIdQuery, useGetAssignmentsByCourseQuery, useGetMaterialsQuery, useUploadMaterialMutation, useGetCourseStudentsQuery, useDeleteMaterialMutation } from '@/lib/store/features/courses/coursesApi';
 import Link from 'next/link';
 import Avatar from 'antd/es/avatar/Avatar';
 
@@ -41,6 +41,16 @@ export default function CoursePage() {
     // For teacher to upload course materials
     const { data: materials } = useGetMaterialsQuery(Number(id));
     const [uploadMaterial] = useUploadMaterialMutation();
+    const [deleteMaterial] = useDeleteMaterialMutation();
+
+    const handleDeleteMaterial = async (materialId: number) => {
+        try {
+            await deleteMaterial(materialId).unwrap();
+            message.success("Матеріал видалено");
+        } catch (e) {
+            message.error("Помилка видалення");
+        }
+    };
 
     const handleUploadMaterial = async (options: any) => {
         const { file, onSuccess } = options;
@@ -151,7 +161,25 @@ export default function CoursePage() {
             <List
                 dataSource={materials}
                 renderItem={item => (
-                    <List.Item actions={[<a href={`http://localhost:8000${item.file_url}`} target="_blank">Завантажити</a>]}>
+                    <List.Item
+                        actions={[
+                            <a key="download" href={`http://localhost:8000${item.file_url}`} target="_blank" rel="noopener noreferrer">
+                                Завантажити
+                            </a>,
+                            isTeacher && (
+                                <Popconfirm
+                                    key="delete"
+                                    title="Видалити цей матеріал?"
+                                    description="Цю дію неможливо скасувати."
+                                    onConfirm={() => handleDeleteMaterial(item.id)}
+                                    okText="Так"
+                                    cancelText="Ні"
+                                >
+                                    <Button danger type="text" icon={<DeleteOutlined />} />
+                                </Popconfirm>
+                            )
+                        ]}
+                    >
                         <List.Item.Meta
                             avatar={<FilePdfOutlined className="text-2xl text-red-500" />}
                             title={item.title}
@@ -159,6 +187,68 @@ export default function CoursePage() {
                     </List.Item>
                 )}
             />
+        </div>
+    );
+
+    const participantsTab = (
+        <div className="p-4">
+            {course?.teacher && (
+                <div className="mb-6">
+                    <h3 className="text-gray-500 font-semibold mb-2 uppercase text-xs">Викладач курсу</h3>
+                    <List itemLayout="horizontal">
+                        <List.Item className="bg-blue-50 rounded-lg p-4 border border-blue-100">
+                            <List.Item.Meta
+                                avatar={
+                                    <Avatar
+                                        src={course.teacher.avatar_url}
+                                        icon={<UserOutlined />}
+                                        size="large"
+                                        className="bg-blue-500 px-[20px]"
+                                    />
+                                }
+                                title={
+                                    <Link href={`/dashboard/profile/${course.teacher.id}`} className="text-lg font-bold text-blue-900">
+                                        {course.teacher.full_name}
+                                    </Link>
+                                }
+                                description={
+                                    <div>
+                                        <span className="bg-blue-200 text-blue-800 text-xs px-2 py-1 rounded-full font-semibold">
+                                            Автор курсу
+                                        </span>
+                                        <span className="ml-2 text-gray-500">{course.teacher.email}</span>
+                                    </div>
+                                }
+                            />
+                        </List.Item>
+                    </List>
+                </div>
+            )}
+
+            <div>
+                <div className="flex justify-between items-center mb-2">
+                    <h3 className="text-gray-500 font-semibold uppercase text-xs">Студенти ({studentsList?.length || 0})</h3>
+                </div>
+
+                <List
+                    dataSource={studentsList}
+                    loading={loadingCourse}
+                    renderItem={student => (
+                        <List.Item>
+                            <List.Item.Meta
+                                avatar={<Avatar src={student.avatar_url} icon={<UserOutlined />} />}
+                                title={<Link href={`/dashboard/profile/${student.id}`}>{student.full_name}</Link>}
+                                description="Студент"
+                            />
+                        </List.Item>
+                    )}
+                />
+                {(!studentsList || studentsList.length === 0) && (
+                    <div className="text-center text-gray-400 py-4 italic">
+                        На цьому курсі ще немає студентів.
+                    </div>
+                )}
+            </div>
         </div>
     );
 
@@ -176,31 +266,7 @@ export default function CoursePage() {
         {
             key: '3',
             label: 'Учасники',
-            children: (
-                <div className="p-4">
-                    {isAdmin ? (
-                        <div className="text-center">
-                            <p className="mb-4 text-gray-500">Керування доступом студентів до цього курсу.</p>
-                            <Button type="primary" onClick={() => setIsAdminEnrollModalOpen(true)}>
-                                Керувати учасниками
-                            </Button>
-                        </div>
-                    ) : (
-                        <List
-                            dataSource={studentsList}
-                            renderItem={student => (
-                                <List.Item>
-                                    <List.Item.Meta
-                                        avatar={<Avatar src={student.avatar_url} icon={<UserOutlined />} />}
-                                        title={<Link href={`/dashboard/profile/${student.id}`}>{student.full_name}</Link>}
-                                        description={student.role === 'student' ? 'Студент' : 'Викладач'}
-                                    />
-                                </List.Item>
-                            )}
-                        />
-                    )}
-                </div>
-            ),
+            children: participantsTab
         },
     ];
 

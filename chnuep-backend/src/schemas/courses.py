@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from typing import Optional
+from schemas.auth import UserResponseSchema
 
 class CourseCreateSchema(BaseModel):
     title: str
@@ -11,5 +12,11 @@ class CourseResponseSchema(BaseModel):
     description: str
     teacher_id: int
 
+    teacher: Optional[UserResponseSchema] = None
+
     class Config:
         from_attributes = True
+
+class CourseUpdateSchema(BaseModel):
+    title: str
+    description: str

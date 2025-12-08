@@ -51,3 +51,31 @@ async def upload_material(
 @router.get("/{course_id}", response_model=List[MaterialResponse])
 async def get_materials(course_id: int, session: SessionDependency, user: CurrentUserDependency):
     return await MaterialRepository(session).get_by_course(course_id)
+
+
+@router.delete("/{material_id}", status_code=204)
+async def delete_material(
+        material_id: int,
+        session: SessionDependency,
+        course_repo: CourseRepoDependency,
+        user: TeacherUserDependency
+):
+    repo = MaterialRepository(session)
+    material = await repo.get_by_id(material_id)
+
+    if not material:
+        raise HTTPException(status_code=404, detail="Material not found")
+
+    course = await course_repo.get_by_id(material.course_id)
+    if not course or course.teacher_id != user.id:
+        raise HTTPException(status_code=403, detail="You do not have permission to delete this material")
+
+    file_path = material.file_url.lstrip("/")
+
+    if os.path.exists(file_path):
+        os.remove(file_path)
+
+    await repo.delete(material_id)
+    await session.commit()
+
+    return None

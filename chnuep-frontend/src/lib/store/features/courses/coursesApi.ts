@@ -1,11 +1,13 @@
 import { api } from '../../api';
 import { User } from '../auth/authSlice';
+import { CourseGrade } from '../grades/gradesApi';
 
 export interface Course {
     id: number;
     title: string;
     description: string;
     teacher_id: number;
+    teacher?: User;
 }
 
 export interface Assignment {
@@ -31,6 +33,8 @@ export interface Submission {
         avatar_url?: string;
     };
 }
+
+
 
 export const coursesApi = api.injectEndpoints({
     endpoints: (builder) => ({
@@ -138,6 +142,36 @@ export const coursesApi = api.injectEndpoints({
             },
             invalidatesTags: ['Materials'],
         }),
+        deleteMaterial: builder.mutation<void, number>({
+            query: (materialId) => ({
+                url: `/materials/${materialId}`,
+                method: 'DELETE',
+            }),
+            invalidatesTags: ['Materials'],
+        }),
+        getMyGrades: builder.query<CourseGrade[], void>({
+            query: () => '/grades/my',
+            providesTags: ['Submissions'],
+        }),
+        updateCourse: builder.mutation<Course, { id: number; data: { title: string; description: string } }>({
+            query: ({ id, data }) => ({
+                url: `/courses/${id}`,
+                method: 'PUT',
+                body: data,
+            }),
+            invalidatesTags: ['Courses'],
+        }),
+        deleteCourse: builder.mutation<void, number>({
+            query: (id) => ({
+                url: `/courses/${id}`,
+                method: 'DELETE',
+            }),
+            invalidatesTags: ['Courses'],
+        }),
+        getPendingSubmissionsCount: builder.query<number, void>({
+            query: () => '/submissions/pending/count',
+            providesTags: ['Submissions'],
+        }),
     }),
 });
 
@@ -156,5 +190,10 @@ export const {
     useGetCourseStudentsQuery,
     useGetAllStudentsQuery,
     useGetMaterialsQuery,
-    useUploadMaterialMutation
+    useUploadMaterialMutation,
+    useDeleteMaterialMutation,
+    useGetMyGradesQuery,
+    useUpdateCourseMutation,
+    useDeleteCourseMutation,
+    useGetPendingSubmissionsCountQuery,
 } = coursesApi;

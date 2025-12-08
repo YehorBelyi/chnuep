@@ -18,6 +18,8 @@ class SubmissionResponseSchema(BaseModel):
     grade: Optional[int] = None
     submitted_at: datetime
 
+    teacher_comment: Optional[str] = None
+
     # To mark students submissions and to get info about him
     student: Optional[UserResponseSchema] = None
 

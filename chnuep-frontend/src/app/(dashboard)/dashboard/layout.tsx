@@ -16,6 +16,7 @@ import { RootState } from '@/lib/store/store';
 import { logout } from '@/lib/store/features/auth/authSlice';
 import { useLogoutMutation } from '@/lib/store/features/auth/authApi';
 import Link from 'next/link';
+import NotificationBell from '@/app/components/header/NotificationBell';
 
 const { Header, Content, Footer, Sider } = Layout;
 
@@ -43,7 +44,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         const baseItems = [
             { key: '/dashboard', icon: <HomeOutlined />, label: 'Головна' },
             { key: '/dashboard/profile', icon: <UserOutlined />, label: 'Мій профіль' },
-            { key: '/dashboard/chat', icon: <MessageOutlined />, label: 'Повідомлення' },
         ];
 
         if (user?.role === 'student') {
@@ -84,6 +84,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     <Breadcrumb items={[{ title: 'Dashboard' }, { title: pathname.split('/').pop() }]} />
 
                     <div className="flex items-center gap-3">
+                        <NotificationBell />
                         <span className="font-medium">{user?.full_name}</span>
                         <Dropdown menu={{ items: [{ key: 'logout', label: 'Вийти', icon: <LogoutOutlined />, onClick: handleLogout, danger: true }] }}>
                             <Avatar src={user?.avatar_url} icon={<UserOutlined />} className="cursor-pointer bg-blue-500" />
